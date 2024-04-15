@@ -1,0 +1,116 @@
+#region Using directives
+using System;
+using UAManagedCore;
+using OpcUa = UAManagedCore.OpcUa;
+using FTOptix.HMIProject;
+using FTOptix.Retentivity;
+using FTOptix.UI;
+using FTOptix.NativeUI;
+using FTOptix.CoreBase;
+using FTOptix.Core;
+using FTOptix.NetLogic;
+using Microsoft.VisualBasic.FileIO;
+#endregion
+
+public class CreateObjectsFromCSV_DT : BaseNetLogic
+{
+
+    private string GetCSVFilePath()
+    {
+        var csvPathVariable = LogicObject.GetVariable("CSVFile");
+        if (csvPathVariable == null)
+        {
+            Log.Error("RecipeImportExport", "CSVFile variable not found");
+            return "";
+        }
+
+        return new ResourceUri(csvPathVariable.Value).Uri;
+    }
+
+    private char GetSeparator()
+    {
+        var separatorVariable = LogicObject.GetVariable("CSVSeparator");
+        string separatorString = separatorVariable.Value;
+
+        return (separatorString.Length != 1) ? ',' : separatorString[0];
+    }
+
+    [ExportMethod]
+    public void createModelTagsFromCSV()
+    {
+
+        var originalTAGs = Project.Current.Get<Folder>("Model/OriginalTAGs");
+        if(originalTAGs == null){
+            Log.Info("Folder OriginalTAGs not found. Creating it.");
+            var newFolder = InformationModel.Make<Folder>("OriginalTAGs");
+            Project.Current.Get("Model").Add(newFolder);
+        } else {
+            Log.Info(originalTAGs.BrowseName + " Folder Found. Skipping creation.");
+        }
+
+        var anyTIMETAGs = Project.Current.Get<Folder>("Model/AnyTIMETAGs");
+        if(originalTAGs == null){
+            Log.Info("Folder AnyTIMETAGs not found. Creating it.");
+            var newFolder = InformationModel.Make<Folder>("AnyTIMETAGs");
+            Project.Current.Get("Model").Add(newFolder);
+        } else {
+            Log.Info(anyTIMETAGs.BrowseName + " Folder Found. Skipping creation.");
+        }
+        
+        var tagsType = Project.Current.Get("Model/TAG");
+        if(tagsType == null){
+            Log.Info("Object Type TAG not found. Creating it.");
+            var newObjectType = InformationModel.MakeObjectType("TAG");
+            newObjectType.Add(InformationModel.MakeVariable("TagName", OpcUa.DataTypes.String));
+            newObjectType.Add(InformationModel.MakeVariable("TagDataType", OpcUa.DataTypes.String));
+            Project.Current.Get("Model").Add(newObjectType);
+        } else {
+            Log.Info(tagsType.BrowseName + " Object Type Found. Skipping creation.");
+            if(tagsType.GetVariable("TagName") == null){
+                Log.Info("Variable TagName not found. Creating it.");
+                tagsType.Add(InformationModel.MakeVariable("TagName", OpcUa.DataTypes.String));
+            } else {
+                Log.Info("Variable TagName found. Skipping creation.");
+            }
+            if(tagsType.GetVariable("TagDataType") == null){
+                Log.Info("Variable TagDataType not found. Creating it.");
+                tagsType.Add(InformationModel.MakeVariable("TagDataType", OpcUa.DataTypes.String));
+            } else {
+                Log.Info("Variable TagDataType found. Skipping creation.");
+            }
+
+        var csvPath = GetCSVFilePath();
+        if (string.IsNullOrEmpty(csvPath))
+
+        {
+            Log.Error("RecipeImportExport", "Unable to import recipes: please specify the input CSV file");
+            return;
+        }
+
+        var separator = GetSeparator();
+        if (separator == '.')
+        {
+            Log.Error("RecipeImportExport", "Unable to import recipes: CSV separator " + separator + " is not supported");
+            return;
+        }
+
+        Log.Info("FilePath: " + csvPath);
+
+        using (TextFieldParser parser = new TextFieldParser(csvPath))
+        {
+            parser.TextFieldType = FieldType.Delimited;
+            parser.SetDelimiters(separator.ToString());
+
+            while (!parser.EndOfData)
+            {
+                string[] fields = parser.ReadFields();
+
+                // Access individual fields from the CSV row using array indexing
+                string fieldValue = fields[0]; 
+                Log.Info("Field: " + fieldValue);
+            }
+        }
+
+        }
+    }
+}
