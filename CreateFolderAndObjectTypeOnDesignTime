@@ -1,0 +1,44 @@
+public void createModelTagsFromCSV()
+    {
+
+        var originalTAGs = Project.Current.Get<Folder>("Model/OriginalTAGs");
+        if(originalTAGs == null){
+            Log.Info("Folder OriginalTAGs not found. Creating it.");
+            var newFolder = InformationModel.Make<Folder>("OriginalTAGs");
+            Project.Current.Get("Model").Add(newFolder);
+        } else {
+            Log.Info(originalTAGs.BrowseName + " Folder Found. Skipping creation.");
+        }
+
+        var anyTIMETAGs = Project.Current.Get<Folder>("Model/AnyTIMETAGs");
+        if(originalTAGs == null){
+            Log.Info("Folder AnyTIMETAGs not found. Creating it.");
+            var newFolder = InformationModel.Make<Folder>("AnyTIMETAGs");
+            Project.Current.Get("Model").Add(newFolder);
+        } else {
+            Log.Info(anyTIMETAGs.BrowseName + " Folder Found. Skipping creation.");
+        }
+        
+        var tagsType = Project.Current.Get("Model/TAG");
+        if(tagsType == null){
+            Log.Info("Object Type TAG not found. Creating it.");
+            var newObjectType = InformationModel.MakeObjectType("TAG");
+            newObjectType.Add(InformationModel.MakeVariable("TagName", OpcUa.DataTypes.String));
+            newObjectType.Add(InformationModel.MakeVariable("TagDataType", OpcUa.DataTypes.String));
+            Project.Current.Get("Model").Add(newObjectType);
+        } else {
+            Log.Info(tagsType.BrowseName + " Object Type Found. Skipping creation.");
+            if(tagsType.GetVariable("TagName") == null){
+                Log.Info("Variable TagName not found. Creating it.");
+                tagsType.Add(InformationModel.MakeVariable("TagName", OpcUa.DataTypes.String));
+            } else {
+                Log.Info("Variable TagName found. Skipping creation.");
+            }
+            if(tagsType.GetVariable("TagDataType") == null){
+                Log.Info("Variable TagDataType not found. Creating it.");
+                tagsType.Add(InformationModel.MakeVariable("TagDataType", OpcUa.DataTypes.String));
+            } else {
+                Log.Info("Variable TagDataType found. Skipping creation.");
+            }
+}
+}
