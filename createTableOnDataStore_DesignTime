@@ -1,0 +1,2 @@
+var newTable = InformationModel.Make<Table>("Table3");
+Project.Current.Get("DataStores/NewDataStore/Tables").Add(newTable);
